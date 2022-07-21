@@ -4,15 +4,27 @@ import VM from "@ethereumjs/vm";
 import Common, { Chain, Hardfork } from "@ethereumjs/common";
 import { BN } from "bn.js";
 import { example } from "./example";
+import { InterpreterStep } from "@ethereumjs/vm/dist/evm/interpreter";
 
 function App() {
 
     let [code, setCode] = useState<string>(example);
     let [bytecode, setBytecode] = useState<string>("");
     let [returnData, setReturnData] = useState<string>("");
+    let [lastSteps, setLastSteps] = useState<number>(-1);
+    let [opcode, setOpcode] = useState<string>("");
+    let [stack, setStack] = useState<string>("");
+    let [memory, setMemory] = useState<string>("");
 
     function handleCompile(event: any) {
         event.preventDefault();
+        
+        setReturnData("");
+        setLastSteps(-1);
+        setOpcode("");
+        setStack("");
+        setMemory("");
+        
         init().then(() => {
             let bytecode = compile(code);
             setBytecode(bytecode);
@@ -21,16 +33,47 @@ function App() {
 
     function handleExecute(event: any) {
         let runtimeBytecode = bytecode.slice(18);
-        console.log(runtimeBytecode);
         (async () => {
             const common = new Common({ chain: Chain.Mainnet, hardfork: Hardfork.MuirGlacier});
             const vm = new VM({ common });
-            vm.on('step', () => {})
+
+            let done = false;
+            let currentSteps = 0;
+
+            vm.on('step', (step: InterpreterStep) => {
+                const stack = step.stack.map(elem => elem.toString("hex"));
+                const memory: string[] = [];
+                for (let i = 0; i < step.memory.length; i += 32) {
+                    memory[i/32] = step.memory.slice(i, i+32).join("");
+                };
+
+                currentSteps++;
+
+                if (currentSteps > lastSteps && !done) {
+                    console.log(`stack: ${stack}`);
+                    console.log(`memory: ${memory}`);
+                    console.log(`pc: ${step.pc}`);
+                    console.log(`depth: ${step.depth}`);
+                    console.log(`opcode: ${step.opcode.name}`);
+                    console.log("======================");
+                    
+                    setOpcode(step.opcode.name);
+                    setStack(stack.join(", "));
+                    setMemory(memory.join(", "));
+                    
+                    setLastSteps(currentSteps);
+                    done = true;
+                }
+            })
+
             const result = await vm.runCode({
                 code: Buffer.from(runtimeBytecode, "hex"),
                 gasLimit: new BN(0xffffffffffff)
             });
-            setReturnData(result.returnValue.toString("hex"));
+
+            if (currentSteps === lastSteps) {
+                setReturnData(result.returnValue.toString("hex"));
+            }
         })();
     }
 
@@ -53,7 +96,15 @@ function App() {
             0x{bytecode}
             <br />
             <br />
-            <button onClick={handleExecute}>Execute</button>
+            <button onClick={handleExecute}>Step</button>
+            <h2>Step Data</h2>
+            <h4>opcode</h4>
+            {opcode}
+            <h4>stack</h4>
+            {stack}
+            <h4>memory</h4>
+            {memory}
+            
             <h2>Return Data</h2>
             0x{returnData}
         </div>
