@@ -1,10 +1,11 @@
 {
-  "name": "huff-playground",
+  "name": "@ncitron/huff-playground",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@ethereumjs/common": "^2.6.5",
     "@ethereumjs/vm": "^5.9.3",
+    "@ncitron/huff-wasm": "^0.1.0",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
@@ -57,5 +58,9 @@
   },
   "devDependencies": {
     "react-app-rewired": "^2.2.1"
-  }
+  },
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "main": "config-overrides.js",
+  "author": "",
+  "license": "ISC"
 }
