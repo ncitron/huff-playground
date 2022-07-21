@@ -1,5 +1,5 @@
 import { useState } from "react";
-import init, { compile } from "huff-wasm";
+import init, { compile } from "@ncitron/huff-wasm";
 import VM from "@ethereumjs/vm";
 import Common, { Chain, Hardfork } from "@ethereumjs/common";
 import { BN } from "bn.js";
